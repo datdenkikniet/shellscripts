@@ -1,0 +1,15 @@
+[Unit]
+Wants=network-online.target
+After=network-online.target
+Description=Start the factorio server
+
+[Service]
+User=factorio
+Group=factorio
+Type=simple
+WorkingDirectory=/home/factorio
+ExecStart=/home/factorio/startserver.sh
+KillMode=mixed
+
+[Install]
+WantedBy=multi-user.target

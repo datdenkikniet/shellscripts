@@ -1,0 +1,27 @@
+PCI(e) passthrough
+	enable iommu kernel option
+	enable iommu kernel modules (in /etc/modules)
+	disable e1000e drivers for network devices (in /etc/modprobe.d)
+	enable virtio drivers for network devices (with options line)
+	regenerate ramfs (update-initramfs -u -k all)
+	In order to pass through only a few: don't mention the functions you don't 
+		want passed through in any vm's conf file, and they should be available
+		in the OS as long as they're in different IOMMU groups 
+		See: find /sys/kernel/iommu_groups/ -type l | sort
+		and: dmesg | grep iommu
+
+Thin pools
+	Add pv
+	Create vg on pv
+	Create thin pool in vg
+	Create thin LVM in thin pool
+	Add entry to /etc/pve/storage.cfg
+
+KVM in container
+	Add "options kvm-intel nested=Y" (or kvm-amd nested=1 for AMD)
+	Create a new container with the following options
+		unprivileged: 0
+		lxc.cgroup.devices.allow: c 10:232 rwm
+
+Run unsupported versions of CentOS/Ubuntu/whatever
+	Find nano /usr/share/perl5/PVE/LXC/Setup/CentOS.pm (or other OS) and change the version number check (if it exists)

@@ -1,0 +1,44 @@
+71a72,73
+>             fetch=*)
+>                 export FETCH="${x#fetch=}" ;;
+212d213
+<     [ "$quiet" != "y" ] && log_begin_msg "Trying netboot from ${NFSROOT}"
+214,224c215,228
+<     if [ "${NETBOOT}" = "url" ] ; then
+<         if do_urlmount; then
+<             rc=0
+<         fi
+<     elif [ "${NETBOOT}" != "nfs" ] && do_cifsmount ; then
+<         rc=0
+<     elif do_nfsmount ; then
+<         NETBOOT="nfs"
+<         export NETBOOT
+<         rc=0
+<     fi
+---
+>     case ${NETBOOT} in
+>         nfs)
+>             [ "$quiet" != "y" ] && log_begin_msg "Trying netboot from nfs, ${NFSROOT}"
+>             if do_nfsmount ; then NETBOOT="nfs"; export NETBOOT; rc=0; fi ;;
+>         url)
+>             [ "$quiet" != "y" ] && log_begin_msg "Trying netboot from URL ${URL}"
+>             if do_urlmount; then rc=0; fi ;;
+>         cifs)
+>             [ "$quiet" != "y" ] && log_begin_msg "Trying netboot from cifs, ${NFSROOT}"
+>             if do_cifsmount ; then rc=0; fi ;;
+>         http)
+>             [ "$quiet" != "y" ] && log_begin_msg "Trying netboot over HTTP from URL ${FETCH}"
+>             if do_httpmount ; then rc=0; fi ;;
+>     esac
+228a233,243
+> 
+> do_httpmount() {
+>     rc=1
+>     mkdir -p ${mountpoint}
+>     size=$(wget -qO - ${FETCH}.size)
+>     mount -t tmpfs -o size=${size} tmpfs ${mountpoint}
+>     mkdir -p ${mountpoint}/casper
+>     if wget ${FETCH} -O ${mountpoint}/casper/root.squashfs; then rc=0; fi
+>     return ${rc}
+> }
+> 
