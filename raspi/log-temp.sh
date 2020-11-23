@@ -67,7 +67,6 @@ logtemp() {
     temp=$1
     chip=$2
     wget -q --post-data "temperature,chip=$chip value=$temp" "http://grafana.internal:8086/write?db=temperature" --http-user="$GRAFANA_USER" --http-password="$GRAFANA_PASSWORD"
-    echo "$temp" > $currenttemp
 
     # size=$(getfilesize $file)
     # if [ $size -ge 128 ]; then
@@ -105,5 +104,6 @@ while sleep 30; do
     logtemp $tempds ds3231
     tempah=$(gettemp aht10)
     logtemp $tempah aht10
+    echo "$tempds" > $currenttemp
     /root/blink-led.sh
 done
