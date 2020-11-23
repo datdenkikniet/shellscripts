@@ -28,9 +28,9 @@ gettemp(){
         fi
         echo "${tempudec}.${templdec}"
     elif [ $1 = "aht10" ]; then
-        if [ -z $aht_init ]; then
+        if [ ! -f $aht10pid  ]; then
             /root/aht10 init
-            aht_init=1
+            touch $aht10pid
         fi
         temp=$(/root/aht10 measq | sed 's/,.*$//')
         echo $temp
@@ -77,6 +77,7 @@ logtemp() {
 }
 
 currenttemp=/run/currenttemp.txt
+aht10pid=/run/aht10.pid
 
 if [ -z $CHIPNAME ]; then
     echo "Error! \$CHIPNAME environment variable is not set!"
