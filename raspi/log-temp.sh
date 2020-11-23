@@ -1,27 +1,37 @@
 #!/bin/zsh
 
 gettemp(){
-    templ=$(i2cget -y 1 0x68 0x12)
-    tempu=$(i2cget -y 1 0x68 0x11)
-
-    templdec=$(([##10]templ))
-
-    templdec=$(((templdec * 100)/256))
-    tempudec=$(([##10]tempu))
-
-    temptotal=$((tempudec*100 + templdec))
-    if [ "$tempudec" -gt 127 ] && ((temptotal=temptotal-25600));
-
-    tempudec=$((temptotal/100))
-    templdec=$((temptotal%100))
-
-    if [ $templdec -lt 0 ]; then
-        templdec=$((templdec*-1))
-        if [ $tempudec -eq 0 ]; then
-            tempudec="-0"
-        fi
+    if [ -z $1 ]; then
+        echo "No chip type given for gettemp"
+        exit 0
     fi
-    echo "${tempudec}.${templdec}"}
+    if [ $1 = "ds3231" ]; then
+        templ=$(i2cget -y 1 0x68 0x12)
+        tempu=$(i2cget -y 1 0x68 0x11)
+
+        templdec=$(([##10]templ))
+
+        templdec=$(((templdec * 100)/256))
+        tempudec=$(([##10]tempu))
+
+        temptotal=$((tempudec*100 + templdec))
+        if [ "$tempudec" -gt 127 ] && ((temptotal=temptotal-25600));
+
+        tempudec=$((temptotal/100))
+        templdec=$((temptotal%100))
+
+        if [ $templdec -lt 0 ]; then
+            templdec=$((templdec*-1))
+            if [ $tempudec -eq 0 ]; then
+                tempudec="-0"
+            fi
+        fi
+        echo "${tempudec}.${templdec}"
+    elif [ $1 = "aht10" ]; then
+        temp=$(/root/aht10 measq | sed 's/,.*$//')
+        echo $temp
+    fi
+}
 
 getfilesize(){
     file="$1"
@@ -63,29 +73,33 @@ logtemp() {
 
 }
 
-file=/root/temperature.log
 currenttemp=/run/currenttemp.txt
-
-if [ ! -z $1 ]; then
-    file=$1
-fi
 
 if [ -z $CHIPNAME ]; then
     echo "Error! \$CHIPNAME environment variable is not set!"
     exit 1
 fi
 
+if [ -z $CHIPTYPE ]; then
+    echo "Error! \$CHIPTYPE environment variable is not set!"
+    exit 1
+fi
+
 if [ -z $GRAFANA_USER ]; then
     echo "Error! \$GRAFANA_USER environment variable is not set!"
+    exit 1
 fi
 
 if [ -z $GRAFANA_PASSWORD ]; then
     echo "Error! \$GRAFANA_PASSWORD environment variable is not set!"
+    exit 1
 fi
 
 
 while sleep 30; do
-    temp=$(gettemp)
-    logtemp $temp $CHIPNAME
+    tempds=$(gettemp ds3231)
+    logtemp $tempds ds3231
+    tempah=$(gettemp aht10)
+    logtemp $tempah aht10
     /root/blink-led.sh
 done
