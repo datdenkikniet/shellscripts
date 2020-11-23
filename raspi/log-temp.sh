@@ -66,7 +66,7 @@ gzipexistingfile(){
 logtemp() {
     temp=$1
     chip=$2
-    wget -q --post-data "temperature,chip=$chip value=$temp" "http://grafana.internal:8086/write?db=temperature" --http-user="$GRAFANA_USER" --http-password="$GRAFANA_PASSWORD"
+    wget -q --post-data "$chip value=$temp" "http://grafana.internal:8086/write?db=temperature" --http-user="$GRAFANA_USER" --http-password="$GRAFANA_PASSWORD"
 
     # size=$(getfilesize $file)
     # if [ $size -ge 128 ]; then
