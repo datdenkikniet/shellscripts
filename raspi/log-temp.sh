@@ -28,6 +28,10 @@ gettemp(){
         fi
         echo "${tempudec}.${templdec}"
     elif [ $1 = "aht10" ]; then
+        if [ -z $aht_init ]; then
+            /root/aht10 init
+            aht_init=1
+        fi
         temp=$(/root/aht10 measq | sed 's/,.*$//')
         echo $temp
     fi
