@@ -28,6 +28,7 @@ gettemp(){
         fi
         echo "${tempudec}.${templdec}"
     elif [ $1 = "aht10" ]; then
+        # Init if necessary
         if [ ! -f $aht10pid  ]; then
             /root/aht10 init
             touch $aht10pid
@@ -66,6 +67,7 @@ gzipexistingfile(){
 logtemp() {
     temp=$1
     chip=$2
+    # TODO: batchify?
     wget -q --post-data "$chip value=$temp" "http://grafana.internal:8086/write?db=temperature" --http-user="$GRAFANA_USER" --http-password="$GRAFANA_PASSWORD"
 
     # size=$(getfilesize $file)
@@ -76,16 +78,11 @@ logtemp() {
 
 }
 
-currenttemp=/run/currenttemp.txt
+currenttemp=/run/currenttemp
 aht10pid=/run/aht10.pid
 
 if [ -z $CHIPNAME ]; then
     echo "Error! \$CHIPNAME environment variable is not set!"
-    exit 1
-fi
-
-if [ -z $CHIPTYPE ]; then
-    echo "Error! \$CHIPTYPE environment variable is not set!"
     exit 1
 fi
 
@@ -101,10 +98,8 @@ fi
 
 
 while sleep 30; do
-    tempds=$(gettemp ds3231)
-    logtemp $tempds ds3231
-    tempah=$(gettemp aht10)
-    logtemp $tempah aht10
-    echo "$tempds" > $currenttemp
+    temp=$(gettemp $CHIPNAME)
+    logtemp $temp $CHIPNAME
+    echo "$temp" > $currenttemp
     /root/blink-led.sh
 done
