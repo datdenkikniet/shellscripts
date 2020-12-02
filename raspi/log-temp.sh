@@ -28,14 +28,33 @@ gettemp(){
         fi
         echo "${tempudec}.${templdec}"
     elif [ $1 = "aht10" ]; then
-        # Init if necessary
-        if [ ! -f $aht10pid  ]; then
-            /root/aht10 init
-            touch $aht10pid
+        if [ -z $2 ]; then
+            echo "No aht10 measurement data provided!"
+        else
+            data=$2
+            temp=$(echo -n $data | cut -d ',' -f1)
+            echo $temp
         fi
-        temp=$(/root/aht10 measq | sed 's/,.*$//')
-        echo $temp
     fi
+}
+
+gethumidity(){
+    if [ -z $1 ]; then
+        echo "No aht10 measurement data provided!"
+    else
+        data=$1
+        humid=$(echo -n $data | cut -d ',' -f2)
+        echo $humid
+    fi
+}
+
+getdata(){
+    # Init if necessary
+    if [ ! -f $aht10pid  ]; then
+        root/aht10 init
+        touch $aht10pid
+    fi
+    echo -n $(/root/aht10 measq)
 }
 
 getfilesize(){
@@ -64,11 +83,12 @@ gzipexistingfile(){
     fi
 }
 
-logtemp() {
-    temp=$1
-    chip=$2
+logdata() {
+    chip=$1
+    data=$2
     # TODO: batchify?
-    wget -q --post-data "$chip value=$temp" "http://grafana.internal:8086/write?db=temperature" --http-user="$GRAFANA_USER" --http-password="$GRAFANA_PASSWORD"
+
+    wget -O /dev/null -q --post-data "$chip $data" "http://grafana.internal:8086/write?db=temperature" --http-user="$GRAFANA_USER" --http-password="$GRAFANA_PASSWORD"
 
     # size=$(getfilesize $file)
     # if [ $size -ge 128 ]; then
@@ -96,10 +116,16 @@ if [ -z $GRAFANA_PASSWORD ]; then
     exit 1
 fi
 
-
-while sleep 30; do
-    temp=$(gettemp $CHIPNAME)
-    logtemp $temp $CHIPNAME
+performactions(){
+    data=$(getdata)
+    temp=$(gettemp $CHIPNAME $data)
+    humid=$(gethumidity $data)
+    logdata $CHIPNAME "value=$temp,humidity=$humid"
     echo "$temp" > $currenttemp
     /root/blink-led.sh
+}
+
+performactions
+while sleep 30; do
+    performactions
 done
