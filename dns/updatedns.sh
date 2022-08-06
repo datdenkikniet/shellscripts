@@ -58,7 +58,7 @@ discip6() {
             echo "IPv6 support for ifconfig is missing"
             exit 1
         else
-            ip=$(ip -o -6 a show scope global dev $1 dynamic | grep -v "/128" | awk '{ print $4 }' | cut -d/ -f1)
+            ip=$(ip -o -6 a show scope global dev $1 | awk '{ print $4 }' | cut -d/ -f1)
         fi
         echo -n $ip
    fi
