@@ -223,9 +223,13 @@ if [ ! -z $1 ] && [ ! -z $2 ] && [ ! -z $3 ]; then
         password=$2
         name=$3
 
-        oldips=$(cat "$ipfile" 2> /dev/null)
+        if [ -f "$ipfile" ]; then
+            oldips=$(cat "$ipfile" 2> /dev/null)
+        else
+            oldips=""
+        fi
 
-        if [ $force -eq 1 ] || [ -z "$oldips" ] || [ ! "$ips" = "$oldips" ]; then
+        if [ $force -eq 1 ] || [ ! -f "$ipfile" ] || [ ! "$ips" = "$oldips" ]; then
 
             datestr=$(date)
             echomessage "$datestr"
